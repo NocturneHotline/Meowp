@@ -5,7 +5,7 @@ module.exports = {
     version: '1.0.0',
     scheme: 'meowp',
     orientation: 'portrait',
-    icon: './assets/images/icons/icon.png',
+    icon: './assets/icons/appIcon.png',
     userInterfaceStyle: 'light',
     newArchEnabled: true,
     ios: {
@@ -26,7 +26,7 @@ module.exports = {
         },
       },
       adaptiveIcon: {
-        foregroundImage: './assets/images/icons/icon.png',
+        foregroundImage: './assets/icons/appIcon.png',
         backgroundColor: '#ffffff',
       },
     },
