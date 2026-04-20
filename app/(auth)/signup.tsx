@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { View, StyleSheet, Pressable, ScrollView, Text } from 'react-native';
 import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -10,26 +10,29 @@ import { Spacing, Radius, PAGE_HORIZONTAL } from '@/constants/spacing';
 import { MONO_FONT } from '@/constants/typography';
 
 export default function CreateAccountPage() {
-  const [username, setUsername] = useState('');
   const [email, setEmail]       = useState('');
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [confirm, setConfirm]   = useState('');
   const [agreed, setAgreed]     = useState(false);
 
   const passwordMismatch = confirm.length > 0 && confirm !== password;
-  const canSubmit = username && email && password && !passwordMismatch && agreed;
+  const canSubmit = email && username && password && !passwordMismatch && agreed;
 
-  const memberId = 'No.' + Math.floor(1000000 + Math.random() * 9000000);
+  const memberId = useMemo(
+    () => 'No.' + String(Math.floor(1000000 + Math.random() * 9000000)).slice(0, 7),
+    []
+  );
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* Header row */}
+      {/* Header */}
       <View style={styles.headerRow}>
         <Pressable style={styles.back} onPress={() => router.back()}>
-          <Ionicons name="arrow-back" size={18} color={Colors.textSecondary} />
+          <Ionicons name="arrow-back" size={16} color={Colors.textSecondary} />
           <Text style={styles.backLabel}>back</Text>
         </Pressable>
-        <Text style={styles.stepTag}>STEP 1 / 2 ·*</Text>
+        <Text style={styles.stepLabel}>STEP 1 / 2 ·*</Text>
       </View>
 
       <ScrollView
@@ -37,18 +40,16 @@ export default function CreateAccountPage() {
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
       >
-        {/* Member ID Card header */}
-        <View style={styles.memberCard}>
-          <View style={styles.memberCardInner}>
-            <Text style={styles.memberCardTitle}>★  Member ID Card  ★</Text>
-            <View style={styles.memberBadge}>
-              <Text style={styles.memberBadgeText}>{memberId}</Text>
-            </View>
+        {/* Member ID Card */}
+        <View style={styles.idCard}>
+          <Text style={styles.idCardTitle}>★ Member ID Card ★</Text>
+          <View style={styles.idBadge}>
+            <Text style={styles.idBadgeText}>{memberId}</Text>
           </View>
         </View>
 
         {/* Form */}
-        <View style={styles.formCard}>
+        <View style={styles.form}>
           <AppInput
             label="·* email"
             placeholder="your@mail.com"
@@ -60,16 +61,18 @@ export default function CreateAccountPage() {
             leftIcon={<Text style={styles.inputIcon}>✉</Text>}
           />
 
-          <AppInput
-            label="·* handle · 账号"
-            placeholder="@old_orange"
-            value={username}
-            onChangeText={setUsername}
-            autoCapitalize="none"
-            hint="at least 3 letters"
-            containerStyle={styles.field}
-            leftIcon={<Text style={styles.inputIcon}>☆</Text>}
-          />
+          <View>
+            <AppInput
+              label="·* account"
+              placeholder="@old_orange"
+              value={username}
+              onChangeText={setUsername}
+              autoCapitalize="none"
+              containerStyle={styles.field}
+              leftIcon={<Text style={styles.inputIcon}>☆</Text>}
+            />
+            <Text style={styles.hint}>at least 3 letters</Text>
+          </View>
 
           <AppInput
             label="·* password"
@@ -87,20 +90,19 @@ export default function CreateAccountPage() {
             value={confirm}
             onChangeText={setConfirm}
             secureTextEntry
-            error={passwordMismatch ? 'passwords do not match ·*' : undefined}
+            error={passwordMismatch ? 'passwords do not match' : undefined}
             containerStyle={styles.field}
             leftIcon={<Text style={styles.inputIcon}>♪</Text>}
           />
 
-          <View style={styles.dividerDashed} />
+          <View style={styles.divider} />
 
-          {/* Terms checkbox */}
           <Pressable style={styles.termsRow} onPress={() => setAgreed(!agreed)}>
-            <View style={[styles.checkbox, agreed && styles.checkboxChecked]}>
-              {agreed && <Ionicons name="checkmark" size={10} color={Colors.textInverse} />}
+            <View style={[styles.checkbox, agreed && styles.checkboxOn]}>
+              {agreed && <Ionicons name="checkmark" size={10} color="#fff" />}
             </View>
             <Text style={styles.termsText}>
-              I agree to the house rules ♡ &amp; stars policy *
+              I agree to the house rules ♡ & stars policy *
             </Text>
           </Pressable>
         </View>
@@ -108,7 +110,7 @@ export default function CreateAccountPage() {
         <AppButton
           variant="primary"
           size="lg"
-          label="✦ next · 下一步"
+          label="✦  next"
           fullWidth
           disabled={!canSubmit}
           onPress={() => router.push('/(auth)/onboarding')}
@@ -136,6 +138,7 @@ const styles = StyleSheet.create({
     justifyContent:    'space-between',
     paddingHorizontal: PAGE_HORIZONTAL,
     paddingTop:        Spacing.md,
+    paddingBottom:     Spacing.sm,
   },
   back: {
     flexDirection: 'row',
@@ -148,59 +151,62 @@ const styles = StyleSheet.create({
     color:         Colors.textSecondary,
     letterSpacing: 0.5,
   },
-  stepTag: {
+  stepLabel: {
     fontFamily:    MONO_FONT,
-    fontSize:      10,
+    fontSize:      11,
     color:         Colors.textSecondary,
     letterSpacing: 1.2,
   },
+
   scroll: {
     paddingHorizontal: PAGE_HORIZONTAL,
-    paddingTop:        Spacing.xl,
+    paddingTop:        Spacing.md,
     paddingBottom:     Spacing.xxxl,
     gap:               Spacing.md,
   },
-  memberCard: {
-    backgroundColor: Colors.primary,
-    borderRadius:    Radius.lg,
-    padding:         2,
-  },
-  memberCardInner: {
-    backgroundColor: Colors.primaryLight,
-    borderRadius:    Radius.lg - 2,
-    paddingVertical:   Spacing.md,
-    paddingHorizontal: Spacing.lg,
+
+  /* Member ID card */
+  idCard: {
+    backgroundColor:   Colors.primary,
+    borderRadius:      Radius.lg,
     flexDirection:     'row',
     alignItems:        'center',
     justifyContent:    'space-between',
+    paddingVertical:   Spacing.base,
+    paddingHorizontal: Spacing.lg,
   },
-  memberCardTitle: {
+  idCardTitle: {
     fontFamily:    MONO_FONT,
-    fontSize:      12,
-    fontWeight:    '600',
-    color:         Colors.textPrimary,
-    letterSpacing: 1.0,
+    fontSize:      13,
+    fontWeight:    '700',
+    color:         '#fff',
+    letterSpacing: 0.5,
   },
-  memberBadge: {
-    backgroundColor: Colors.primaryDark,
-    paddingVertical:   4,
+  idBadge: {
+    backgroundColor:   Colors.textPrimary,
     paddingHorizontal: Spacing.sm,
+    paddingVertical:   4,
     borderRadius:      Radius.full,
   },
-  memberBadgeText: {
+  idBadgeText: {
     fontFamily:    MONO_FONT,
-    fontSize:      9,
-    color:         Colors.textInverse,
+    fontSize:      11,
+    fontWeight:    '700',
+    color:         '#fff',
     letterSpacing: 0.5,
-    fontWeight:    '600',
   },
-  formCard: {
-    backgroundColor: Colors.card,
+
+  /* Form */
+  form: {
+    backgroundColor: '#FFFFFF',
     borderRadius:    Radius.lg,
-    borderWidth:     1,
-    borderColor:     Colors.border,
-    padding:         Spacing.lg,
+    padding:         Spacing.base,
     gap:             Spacing.md,
+    shadowColor:     '#000',
+    shadowOffset:    { width: 0, height: 2 },
+    shadowOpacity:   0.05,
+    shadowRadius:    8,
+    elevation:       2,
   },
   field: {
     marginBottom: 0,
@@ -209,11 +215,18 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color:    Colors.gray400,
   },
-  dividerDashed: {
+  hint: {
+    fontFamily:    MONO_FONT,
+    fontSize:      10,
+    color:         Colors.textSecondary,
+    letterSpacing: 0.3,
+    marginTop:     4,
+    marginLeft:    2,
+  },
+  divider: {
     borderBottomWidth: 1,
     borderStyle:       'dashed',
     borderColor:       Colors.border,
-    marginVertical:    Spacing.xs,
   },
   termsRow: {
     flexDirection: 'row',
@@ -224,31 +237,32 @@ const styles = StyleSheet.create({
     width:           18,
     height:          18,
     borderRadius:    4,
-    borderWidth:     1,
+    borderWidth:     1.5,
     borderColor:     Colors.border,
     backgroundColor: Colors.gray100,
     alignItems:      'center',
     justifyContent:  'center',
-    marginTop:       1,
     flexShrink:      0,
+    marginTop:       1,
   },
-  checkboxChecked: {
-    backgroundColor: Colors.primaryDark,
-    borderColor:     Colors.primaryDark,
+  checkboxOn: {
+    backgroundColor: Colors.primary,
+    borderColor:     Colors.primary,
   },
   termsText: {
     fontFamily:    MONO_FONT,
-    fontSize:      10,
+    fontSize:      11,
     color:         Colors.textSecondary,
     letterSpacing: 0.3,
     flex:          1,
-    lineHeight:    16,
+    lineHeight:    17,
   },
+
+  /* Bottom */
   signinRow: {
     flexDirection:  'row',
     justifyContent: 'center',
     alignItems:     'center',
-    marginTop:      Spacing.xs,
   },
   signinText: {
     fontFamily:    MONO_FONT,
@@ -257,10 +271,10 @@ const styles = StyleSheet.create({
     letterSpacing: 0.3,
   },
   signinLink: {
-    fontFamily:    MONO_FONT,
-    fontSize:      11,
-    color:         Colors.primaryDark,
-    letterSpacing: 0.3,
+    fontFamily:         MONO_FONT,
+    fontSize:           11,
+    color:              Colors.primaryDark,
+    letterSpacing:      0.3,
     textDecorationLine: 'underline',
   },
 });

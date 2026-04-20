@@ -9,46 +9,69 @@ import { Colors } from '@/constants/colors';
 import { Spacing, Radius, PAGE_HORIZONTAL } from '@/constants/spacing';
 import { MONO_FONT } from '@/constants/typography';
 
-type LoginMethod = 'select' | 'username';
+function WindowControls() {
+  return (
+    <View style={wc.row}>
+      <View style={wc.box} />
+      <View style={wc.box} />
+      <View style={wc.box} />
+    </View>
+  );
+}
+
+const wc = StyleSheet.create({
+  row: { flexDirection: 'row', gap: 4 },
+  box: {
+    width:        14,
+    height:       14,
+    borderRadius: 3,
+    borderWidth:  1,
+    borderColor:  Colors.border,
+  },
+});
 
 export default function LoginMethodsPage() {
-  const [method, setMethod]     = useState<LoginMethod>('select');
-  const [email, setEmail]       = useState('');
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [remember, setRemember] = useState(true);
 
-  if (method === 'username') {
-    return (
-      <SafeAreaView style={styles.container}>
-        <Pressable style={styles.back} onPress={() => setMethod('select')}>
-          <Ionicons name="arrow-back" size={18} color={Colors.textSecondary} />
-          <Text style={styles.backLabel}>back</Text>
-        </Pressable>
+  return (
+    <SafeAreaView style={styles.container}>
+      {/* Stars */}
+      <Text style={[styles.star, { top: 60, left: '48%', fontSize: 20, color: Colors.gray300 }]}>☆</Text>
 
-        <ScrollView
-          contentContainerStyle={styles.scroll}
-          showsVerticalScrollIndicator={false}
-          keyboardShouldPersistTaps="handled"
-        >
-          <Text style={styles.tagline}>·* 欢迎回来 · おかえり ·*</Text>
-          <Text style={styles.welcomeTitle}>welcome back ♡</Text>
+      <ScrollView
+        contentContainerStyle={styles.scroll}
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+      >
+        {/* Header */}
+        <View style={styles.header}>
+          <Text style={styles.tagline}>·* let's return to your space *·</Text>
+          <Text style={styles.title}>welcome back ✦</Text>
+        </View>
 
-          <View style={styles.signInCard}>
-            <Text style={styles.cardHeader}>·* Sign In ✦</Text>
-            <View style={styles.dividerDashed} />
+        {/* Sign In card */}
+        <View style={styles.card}>
+          <View style={styles.cardTitle}>
+            <Text style={styles.cardTitleText}>★ *Sign In ✦</Text>
+            <WindowControls />
+          </View>
+          <View style={styles.cardDivider} />
 
+          <View style={styles.cardBody}>
             <AppInput
               label="·* user · handle"
               placeholder="@your_name"
-              value={email}
-              onChangeText={setEmail}
-              keyboardType="email-address"
+              value={username}
+              onChangeText={setUsername}
               autoCapitalize="none"
               containerStyle={styles.field}
               leftIcon={<Text style={styles.inputIcon}>☆</Text>}
             />
 
             <AppInput
-              label="·* password · パスワード"
+              label="·* password"
               placeholder="••••••••"
               value={password}
               onChangeText={setPassword}
@@ -58,13 +81,13 @@ export default function LoginMethodsPage() {
             />
 
             <View style={styles.rememberRow}>
-              <View style={styles.checkboxRow}>
-                <View style={styles.checkbox}>
-                  <Ionicons name="checkmark" size={10} color={Colors.primaryDark} />
+              <Pressable style={styles.checkRow} onPress={() => setRemember(!remember)}>
+                <View style={[styles.checkbox, remember && styles.checkboxOn]}>
+                  {remember && <Ionicons name="checkmark" size={10} color="#fff" />}
                 </View>
                 <Text style={styles.rememberText}>remember me ♡</Text>
-              </View>
-              <Pressable onPress={() => {}}>
+              </Pressable>
+              <Pressable>
                 <Text style={styles.forgotLink}>forgot?</Text>
               </Pressable>
             </View>
@@ -72,110 +95,57 @@ export default function LoginMethodsPage() {
             <AppButton
               variant="primary"
               size="lg"
-              label="★ Sign In · 登录"
+              label="★  Sign In"
               fullWidth
-              style={styles.submitBtn}
               onPress={() => router.replace('/(tabs)/home')}
             />
+
+            <View style={styles.divider} />
+
+            <View style={styles.socialRow}>
+              <Pressable
+                style={styles.socialBtn}
+                onPress={() => router.push('/(auth)/onboarding')}
+              >
+                <Text style={styles.socialIcon}>♪</Text>
+                <Text style={styles.socialText}>Google</Text>
+              </Pressable>
+              <Pressable
+                style={styles.socialBtn}
+                onPress={() => router.push('/(auth)/onboarding')}
+              >
+                <Text style={styles.socialIcon}>♡</Text>
+                <Text style={styles.socialText}>Guest</Text>
+              </Pressable>
+            </View>
           </View>
-
-          <View style={styles.dividerRow}>
-            <View style={styles.dividerLine} />
-            <Text style={styles.dividerLabel}>· or ·</Text>
-            <View style={styles.dividerLine} />
-          </View>
-
-          <AppButton
-            variant="secondary"
-            size="md"
-            label="♪  Google"
-            fullWidth
-            style={styles.socialBtn}
-            onPress={() => router.push('/(auth)/onboarding')}
-          />
-          <AppButton
-            variant="secondary"
-            size="md"
-            label="  Apple"
-            fullWidth
-            style={styles.socialBtn}
-            onPress={() => router.push('/(auth)/onboarding')}
-          />
-
-          <View style={styles.footer}>
-            <Text style={styles.footerText}>© @meowp · privacy · terms</Text>
-          </View>
-        </ScrollView>
-      </SafeAreaView>
-    );
-  }
-
-  return (
-    <SafeAreaView style={styles.container}>
-      <Pressable style={styles.back} onPress={() => router.back()}>
-        <Ionicons name="arrow-back" size={18} color={Colors.textSecondary} />
-        <Text style={styles.backLabel}>back</Text>
-      </Pressable>
-
-      <ScrollView
-        contentContainerStyle={styles.scroll}
-        showsVerticalScrollIndicator={false}
-      >
-        <Text style={styles.tagline}>·* 欢迎回来 · おかえり ·*</Text>
-        <Text style={styles.welcomeTitle}>welcome back ♡</Text>
-
-        <View style={styles.signInCard}>
-          <Text style={styles.cardHeader}>·* Sign In ✦</Text>
-          <View style={styles.dividerDashed} />
-
-          <Pressable
-            style={({ pressed }) => [styles.methodRow, pressed && styles.pressed]}
-            onPress={() => router.push('/(auth)/onboarding')}
-          >
-            <View style={[styles.methodIcon, { backgroundColor: '#FDE8E8' }]}>
-              <Ionicons name="logo-google" size={20} color="#EA4335" />
-            </View>
-            <View style={styles.methodText}>
-              <Text style={styles.methodTitle}>♪  Google</Text>
-              <Text style={styles.methodSub}>continue with Google account</Text>
-            </View>
-            <Ionicons name="chevron-forward" size={14} color={Colors.gray300} />
-          </Pressable>
-
-          <View style={styles.dividerThin} />
-
-          <Pressable
-            style={({ pressed }) => [styles.methodRow, pressed && styles.pressed]}
-            onPress={() => setMethod('username')}
-          >
-            <View style={[styles.methodIcon, { backgroundColor: Colors.primaryPale }]}>
-              <Ionicons name="person-outline" size={20} color={Colors.primaryDark} />
-            </View>
-            <View style={styles.methodText}>
-              <Text style={styles.methodTitle}>☆  username</Text>
-              <Text style={styles.methodSub}>use email & password</Text>
-            </View>
-            <Ionicons name="chevron-forward" size={14} color={Colors.gray300} />
-          </Pressable>
         </View>
 
         {/* New user banner */}
-        <View style={styles.newUserBanner}>
-          <View style={styles.bannerText}>
-            <Text style={styles.bannerTag}>·* new here? はじめて? ·*</Text>
-            <Text style={styles.bannerTitle}>create your space ♡</Text>
+        <View style={styles.banner}>
+          <View style={styles.bannerLeft}>
+            <Text style={styles.bannerTag}>·* new here? *·</Text>
+            <Text style={styles.bannerTitle}>personalize your map ♡</Text>
           </View>
           <Pressable
             style={styles.signUpBtn}
             onPress={() => router.replace('/(auth)/signup')}
           >
-            <Text style={styles.signUpBtnText}>Sign Up →</Text>
+            <Text style={styles.signUpText}>Sign Up →</Text>
           </Pressable>
         </View>
 
-        <View style={styles.footer}>
-          <Text style={styles.footerMeta}>v1.0  ·  since '25  ·  made w/ ♡</Text>
-          <Text style={styles.footerText}>© @meowp · privacy · terms</Text>
+        {/* Version pills */}
+        <View style={styles.versionRow}>
+          <View style={styles.versionPill}>
+            <Text style={styles.versionText}>v2.0</Text>
+          </View>
+          <View style={[styles.versionPill, styles.versionPillActive]}>
+            <Text style={[styles.versionText, styles.versionTextActive]}>v3.0</Text>
+          </View>
+          <Pressable>
+            <Text style={styles.closeBeta}>close beta test</Text>
+          </Pressable>
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -187,18 +157,9 @@ const styles = StyleSheet.create({
     flex:            1,
     backgroundColor: Colors.background,
   },
-  back: {
-    flexDirection:     'row',
-    alignItems:        'center',
-    paddingHorizontal: PAGE_HORIZONTAL,
-    paddingTop:        Spacing.md,
-    gap:               Spacing.xs,
-  },
-  backLabel: {
-    fontFamily:    MONO_FONT,
-    fontSize:      12,
-    color:         Colors.textSecondary,
-    letterSpacing: 0.5,
+  star: {
+    position: 'absolute',
+    zIndex:   1,
   },
   scroll: {
     paddingHorizontal: PAGE_HORIZONTAL,
@@ -206,53 +167,79 @@ const styles = StyleSheet.create({
     paddingBottom:     Spacing.xxxl,
     gap:               Spacing.md,
   },
+
+  /* Header */
+  header: {
+    alignItems:   'center',
+    gap:          Spacing.xs,
+    marginBottom: Spacing.sm,
+    marginTop:    Spacing.xl,
+  },
   tagline: {
     fontFamily:    MONO_FONT,
-    fontSize:      10,
-    letterSpacing: 1.5,
+    fontSize:      11,
     color:         Colors.textSecondary,
+    letterSpacing: 2,
     textAlign:     'center',
   },
-  welcomeTitle: {
-    fontSize:      26,
+  title: {
+    fontSize:      30,
     fontWeight:    '700',
+    fontStyle:     'italic',
     color:         Colors.textPrimary,
     letterSpacing: 0.3,
     textAlign:     'center',
-    marginBottom:  Spacing.sm,
   },
-  signInCard: {
-    backgroundColor: Colors.card,
+
+  /* Card */
+  card: {
+    backgroundColor: '#FFFFFF',
     borderRadius:    Radius.lg,
-    borderWidth:     1,
-    borderColor:     Colors.border,
-    padding:         Spacing.lg,
-    gap:             Spacing.md,
+    overflow:        'hidden',
+    shadowColor:     '#000',
+    shadowOffset:    { width: 0, height: 2 },
+    shadowOpacity:   0.06,
+    shadowRadius:    10,
+    elevation:       3,
   },
-  cardHeader: {
+  cardTitle: {
+    flexDirection:     'row',
+    alignItems:        'center',
+    justifyContent:    'space-between',
+    paddingHorizontal: Spacing.base,
+    paddingVertical:   Spacing.sm,
+    backgroundColor:   Colors.primaryPale,
+  },
+  cardTitleText: {
     fontFamily:    MONO_FONT,
     fontSize:      11,
-    letterSpacing: 1.0,
-    color:         Colors.textSecondary,
+    fontWeight:    '600',
+    color:         Colors.primaryDark,
+    letterSpacing: 0.5,
   },
-  dividerDashed: {
-    borderBottomWidth: 1,
-    borderStyle:       'dashed',
-    borderColor:       Colors.border,
-  },
-  dividerThin: {
+  cardDivider: {
     height:          1,
-    backgroundColor: Colors.divider,
+    backgroundColor: Colors.primaryLight,
+  },
+  cardBody: {
+    padding: Spacing.base,
+    gap:     Spacing.md,
   },
   field: {
     marginBottom: 0,
   },
+  inputIcon: {
+    fontSize: 13,
+    color:    Colors.gray400,
+  },
+
+  /* Remember / forgot */
   rememberRow: {
     flexDirection:  'row',
     alignItems:     'center',
     justifyContent: 'space-between',
   },
-  checkboxRow: {
+  checkRow: {
     flexDirection: 'row',
     alignItems:    'center',
     gap:           Spacing.xs,
@@ -261,141 +248,143 @@ const styles = StyleSheet.create({
     width:           16,
     height:          16,
     borderRadius:    4,
-    borderWidth:     1,
-    borderColor:     Colors.primaryDark,
-    backgroundColor: Colors.primaryPale,
+    borderWidth:     1.5,
+    borderColor:     Colors.primary,
+    backgroundColor: '#fff',
     alignItems:      'center',
     justifyContent:  'center',
   },
+  checkboxOn: {
+    backgroundColor: Colors.primary,
+    borderColor:     Colors.primary,
+  },
   rememberText: {
     fontFamily:    MONO_FONT,
-    fontSize:      10,
+    fontSize:      11,
     color:         Colors.textSecondary,
-    letterSpacing: 0.5,
+    letterSpacing: 0.3,
   },
   forgotLink: {
-    fontFamily:    MONO_FONT,
-    fontSize:      10,
-    color:         Colors.primaryDark,
-    letterSpacing: 0.5,
+    fontFamily:         MONO_FONT,
+    fontSize:           11,
+    color:              Colors.primaryDark,
+    letterSpacing:      0.3,
     textDecorationLine: 'underline',
   },
-  submitBtn: {
-    marginTop: Spacing.xs,
-  },
-  dividerRow: {
-    flexDirection:  'row',
-    alignItems:     'center',
-    gap:            Spacing.sm,
-    marginVertical: Spacing.xs,
-  },
-  dividerLine: {
-    flex:            1,
+
+  /* Divider */
+  divider: {
     height:          1,
     backgroundColor: Colors.border,
+    marginVertical:  Spacing.xs,
   },
-  dividerLabel: {
-    fontFamily:    MONO_FONT,
-    fontSize:      10,
-    color:         Colors.gray400,
-    letterSpacing: 1,
+
+  /* Social buttons */
+  socialRow: {
+    flexDirection: 'row',
+    gap:           Spacing.sm,
   },
   socialBtn: {
-    marginBottom: Spacing.xs,
-  },
-  methodRow: {
-    flexDirection: 'row',
-    alignItems:    'center',
-    gap:           Spacing.md,
-    paddingVertical: Spacing.xs,
-  },
-  pressed: {
-    opacity: 0.72,
-  },
-  methodIcon: {
-    width:          44,
-    height:         44,
-    borderRadius:   Radius.md,
-    alignItems:     'center',
-    justifyContent: 'center',
-  },
-  methodText: {
-    flex: 1,
-    gap:  2,
-  },
-  methodTitle: {
-    fontFamily:    MONO_FONT,
-    fontSize:      13,
-    fontWeight:    '500',
-    color:         Colors.textPrimary,
-    letterSpacing: 0.3,
-  },
-  methodSub: {
-    fontFamily:    MONO_FONT,
-    fontSize:      10,
-    color:         Colors.textSecondary,
-    letterSpacing: 0.3,
-  },
-  newUserBanner: {
-    backgroundColor: Colors.primaryPale,
-    borderRadius:    Radius.lg,
-    borderWidth:     1,
-    borderColor:     Colors.primaryLight,
-    padding:         Spacing.base,
+    flex:            1,
     flexDirection:   'row',
     alignItems:      'center',
-    gap:             Spacing.md,
+    justifyContent:  'center',
+    gap:             Spacing.xs,
+    paddingVertical: Spacing.sm,
+    borderRadius:    Radius.md,
+    borderWidth:     1.5,
+    borderColor:     Colors.border,
+    backgroundColor: '#fff',
   },
-  bannerText: {
+  socialIcon: {
+    fontSize: 14,
+    color:    Colors.textSecondary,
+  },
+  socialText: {
+    fontFamily:    MONO_FONT,
+    fontSize:      13,
+    color:         Colors.textPrimary,
+    fontWeight:    '500',
+    letterSpacing: 0.3,
+  },
+
+  /* New user banner */
+  banner: {
+    flexDirection:     'row',
+    alignItems:        'center',
+    backgroundColor:   Colors.primaryPale,
+    borderRadius:      Radius.lg,
+    borderWidth:       1,
+    borderColor:       Colors.primaryLight,
+    padding:           Spacing.base,
+    gap:               Spacing.md,
+  },
+  bannerLeft: {
     flex: 1,
     gap:  2,
   },
   bannerTag: {
     fontFamily:    MONO_FONT,
-    fontSize:      9,
+    fontSize:      10,
     color:         Colors.primaryDark,
     letterSpacing: 1,
   },
   bannerTitle: {
+    fontFamily:    MONO_FONT,
+    fontSize:      13,
+    fontWeight:    '600',
+    color:         Colors.textPrimary,
+    letterSpacing: 0.2,
+  },
+  signUpBtn: {
+    paddingVertical:   8,
+    paddingHorizontal: Spacing.md,
+    borderRadius:      Radius.full,
+    borderWidth:       1.5,
+    borderColor:       Colors.textPrimary,
+    backgroundColor:   '#fff',
+  },
+  signUpText: {
     fontFamily:    MONO_FONT,
     fontSize:      12,
     fontWeight:    '600',
     color:         Colors.textPrimary,
     letterSpacing: 0.3,
   },
-  signUpBtn: {
-    paddingVertical:   8,
-    paddingHorizontal: Spacing.md,
+
+  /* Version pills */
+  versionRow: {
+    flexDirection:  'row',
+    alignItems:     'center',
+    justifyContent: 'center',
+    gap:            Spacing.sm,
+    marginTop:      Spacing.xs,
+  },
+  versionPill: {
+    paddingHorizontal: Spacing.sm,
+    paddingVertical:   4,
     borderRadius:      Radius.full,
     borderWidth:       1,
-    borderColor:       Colors.primaryDark,
-    backgroundColor:   Colors.card,
+    borderColor:       Colors.border,
   },
-  signUpBtnText: {
-    fontFamily:    MONO_FONT,
-    fontSize:      11,
-    color:         Colors.primaryDark,
-    letterSpacing: 0.5,
+  versionPillActive: {
+    backgroundColor: Colors.primary,
+    borderColor:     Colors.primary,
   },
-  footer: {
-    alignItems:  'center',
-    gap:         Spacing.xs,
-    marginTop:   Spacing.sm,
-  },
-  footerMeta: {
+  versionText: {
     fontFamily:    MONO_FONT,
     fontSize:      10,
-    color:         Colors.gray400,
+    color:         Colors.textSecondary,
     letterSpacing: 0.5,
   },
-  footerText: {
+  versionTextActive: {
+    color:      Colors.textInverse,
+    fontWeight: '600',
+  },
+  closeBeta: {
     fontFamily:    MONO_FONT,
     fontSize:      10,
-    color:         Colors.gray400,
+    color:         Colors.textSecondary,
     letterSpacing: 0.3,
-  },
-  inputIcon: {
-    fontSize: 13,
-    color:    Colors.gray400,
   },
 });

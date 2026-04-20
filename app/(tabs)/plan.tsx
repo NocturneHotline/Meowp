@@ -1,223 +1,314 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, ScrollView, Image, Text } from 'react-native';
+import {
+  View, StyleSheet, ScrollView, Text, Pressable,
+} from 'react-native';
+import { router } from 'expo-router';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import ScreenContainer from '@/components/common/ScreenContainer';
-import AppText from '@/components/common/AppText';
-import AppButton from '@/components/common/AppButton';
-import AppInput from '@/components/common/AppInput';
-import TransportModeSelector from '@/components/route/TransportModeSelector';
-import StopList from '@/components/route/StopList';
 import { Colors } from '@/constants/colors';
 import { Spacing, Radius, PAGE_HORIZONTAL } from '@/constants/spacing';
 import { MONO_FONT } from '@/constants/typography';
-import { TransportMode } from '@/constants/transportModes';
-import { Stop } from '@/components/route/StopCard';
 
-const DEMO_STOPS: Stop[] = [
-  { id: '1', name: 'Central Park',    address: 'New York, NY',     order: 1 },
-  { id: '2', name: 'MoMA',            address: '11 W 53rd St, NY', order: 2 },
-  { id: '3', name: 'Brooklyn Bridge', address: 'Brooklyn, NY',     order: 3 },
+type Mode = { key: string; icon: string; label: string; time: string };
+
+const MODES: Mode[] = [
+  { key: 'walk',    icon: 'Å',  label: '·walk·',    time: '52m' },
+  { key: 'transit', icon: '⊡',  label: '·transit·', time: '34m' },
+  { key: 'drive',   icon: '⊟',  label: '·drive·',   time: '22m' },
+  { key: 'bike',    icon: '⊕',  label: '·bike·',    time: '28m' },
 ];
 
+type Leg = { label: string; time: string; walkMin: string; walkKm: string; stay?: string };
+
+const ITINERARY: Leg[] = [
+  { label: 'A', time: '10:30 AM', walkMin: '17min', walkKm: '1.4 km' },
+  { label: '1', time: '10:47 AM', walkMin: '17min', walkKm: '1.4 km', stay: 'stay 25m' },
+  { label: '2', time: '11:04 AM', walkMin: '17min', walkKm: '1.4 km', stay: 'stay 40m' },
+  { label: 'Z', time: '11:21 AM', walkMin: '',      walkKm: '',       stay: '' },
+];
+
+const STOP_NAMES: Record<string, string> = {
+  A: 'Home',
+  '1': 'David Jones',
+  '2': 'Top Tea',
+  Z: 'University of Melbourne',
+};
+const STOP_ADDRS: Record<string, string> = {
+  A: '·42 Carlton St·',
+  '1': '·Bourke St Mall·',
+  '2': '·Swanston St·',
+  Z: '·Parkville·',
+};
+
+function WindowControls() {
+  return (
+    <View style={{ flexDirection: 'row', gap: 4 }}>
+      {[0,1,2].map(i => <View key={i} style={{ width: 13, height: 13, borderRadius: 3, borderWidth: 1, borderColor: Colors.border }} />)}
+    </View>
+  );
+}
+
+/* Mini map */
+function RouteMap() {
+  return (
+    <View style={rm.map}>
+      {Array.from({ length: 10 }).map((_, i) => (
+        <View key={`h${i}`} style={[rm.line, rm.horiz, { top: i * 24 }]} />
+      ))}
+      {Array.from({ length: 8 }).map((_, i) => (
+        <View key={`v${i}`} style={[rm.line, rm.vert, { left: i * 38 }]} />
+      ))}
+      <View style={rm.blob} />
+      <View style={rm.blobOrange} />
+      <View style={rm.routeLine} />
+      <View style={[rm.pin, rm.pinPink, { top: 44, left: 16 }]}><Text style={rm.pinTxt}>A</Text></View>
+      <View style={[rm.pin, rm.pinWhite, { top: 32, left: 78 }]}><Text style={[rm.pinTxt, { color: '#333' }]}>1</Text></View>
+      <View style={[rm.pin, rm.pinWhite, { top: 52, left: 148 }]}><Text style={[rm.pinTxt, { color: '#333' }]}>2</Text></View>
+      <View style={[rm.pin, rm.pinBlack, { top: 68, left: 224 }]}><Text style={rm.pinTxt}>Z</Text></View>
+      <Text style={[rm.lbl, { top: 30, left: 10 }]}>Home</Text>
+      <Text style={[rm.lbl, { top: 18, left: 68 }]}>David Jones</Text>
+      <Text style={[rm.lbl, { top: 38, left: 138 }]}>Top Tea</Text>
+      <Text style={[rm.lbl, { top: 84, left: 212, fontSize: 7 }]}>expand·</Text>
+      <View style={rm.tag}><Text style={rm.tagTxt}>·*meowp*·</Text></View>
+      <View style={rm.compass}><Text style={rm.compassTxt}>+ N</Text></View>
+    </View>
+  );
+}
+
+const rm = StyleSheet.create({
+  map: {
+    height: 160, backgroundColor: '#F7F4F0', borderRadius: Radius.md,
+    overflow: 'hidden', borderWidth: 1, borderColor: Colors.border,
+  },
+  line: { position: 'absolute', backgroundColor: '#E0DAD4' },
+  horiz: { left: 0, right: 0, height: 1 },
+  vert:  { top: 0, bottom: 0, width: 1 },
+  blob: {
+    position: 'absolute', top: 68, left: 100, width: 80, height: 34,
+    borderRadius: 999, backgroundColor: Colors.primaryLight, opacity: 0.5,
+  },
+  blobOrange: {
+    position: 'absolute', top: 20, right: 20, width: 60, height: 80,
+    borderRadius: 30, backgroundColor: '#F5D5A0', opacity: 0.5,
+  },
+  routeLine: {
+    position: 'absolute', top: 58, left: 28, width: 210, height: 2,
+    borderStyle: 'dashed', borderWidth: 1, borderColor: Colors.primary,
+  },
+  pin: {
+    position: 'absolute', width: 20, height: 20, borderRadius: 10,
+    alignItems: 'center', justifyContent: 'center',
+  },
+  pinPink:  { backgroundColor: Colors.primary },
+  pinWhite: { backgroundColor: '#fff', borderWidth: 1.5, borderColor: '#333' },
+  pinBlack: { backgroundColor: '#1a1a1a' },
+  pinTxt: { fontFamily: MONO_FONT, fontSize: 8, fontWeight: '700', color: '#fff' },
+  lbl: { position: 'absolute', fontFamily: MONO_FONT, fontSize: 8, color: '#666' },
+  tag: {
+    position: 'absolute', bottom: 8, left: 8, backgroundColor: '#1a1a1a',
+    paddingHorizontal: 6, paddingVertical: 2, borderRadius: 999,
+  },
+  tagTxt: { fontFamily: MONO_FONT, fontSize: 8, color: '#fff', letterSpacing: 1 },
+  compass: {
+    position: 'absolute', top: 8, right: 8, backgroundColor: 'rgba(255,255,255,0.85)',
+    paddingHorizontal: 4, paddingVertical: 2, borderRadius: 4,
+  },
+  compassTxt: { fontFamily: MONO_FONT, fontSize: 8, color: Colors.primaryDark, fontWeight: '700' },
+});
+
 export default function PlanScreen() {
-  const [from, setFrom]       = useState('');
-  const [to, setTo]           = useState('');
-  const [modes, setModes]     = useState<TransportMode[]>(['transit']);
-  const [loading, setLoading] = useState(false);
-
-  const toggleMode = (mode: TransportMode) => {
-    setModes((prev) =>
-      prev.includes(mode) ? prev.filter((m) => m !== mode) : [...prev, mode],
-    );
-  };
-
-  const handleFind = () => {
-    setLoading(true);
-    setTimeout(() => setLoading(false), 1500);
-  };
+  const [activeMode, setActiveMode] = useState('walk');
 
   return (
-    <ScreenContainer>
+    <SafeAreaView style={styles.container}>
+      {/* Star deco */}
+      <Text style={styles.starDeco}>☆</Text>
+
       {/* Header */}
       <View style={styles.header}>
-        <Text style={styles.pageTag}>·* plan · 路线规划</Text>
-        <AppText variant="title">plan a route ✦</AppText>
-        <AppText variant="bodySmall" color={Colors.textSecondary} style={styles.headerSub}>
-          find the best way to get there
-        </AppText>
+        <Pressable style={styles.backBtn} onPress={() => router.back()}>
+          <Ionicons name="arrow-back" size={16} color={Colors.textSecondary} />
+        </Pressable>
+        <View style={styles.headerText}>
+          <Text style={styles.headerTitle}>✦  today's plan</Text>
+          <Text style={styles.headerSub}>4 stops · starts 10:30 AM</Text>
+        </View>
+        <Pressable style={styles.shareBtn}>
+          <Ionicons name="share-outline" size={16} color={Colors.primaryDark} />
+        </Pressable>
       </View>
 
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
-        {/* Search card */}
-        <View style={styles.searchCard}>
-          <Text style={styles.cardTag}>·* from · to</Text>
-          <View style={styles.dividerDashed} />
-
-          <AppInput
-            placeholder="from..."
-            value={from}
-            onChangeText={setFrom}
-            leftIcon={<View style={styles.dotOrigin} />}
-            containerStyle={styles.inputWrap}
-          />
-          <View style={styles.routeLine} />
-          <AppInput
-            placeholder="to..."
-            value={to}
-            onChangeText={setTo}
-            leftIcon={<Ionicons name="location" size={13} color={Colors.primaryDark} />}
-            containerStyle={styles.inputWrap}
-          />
-        </View>
-
-        {/* Transport mode */}
-        <View style={styles.section}>
-          <Text style={styles.sectionLabel}>♪ how are you travelling?</Text>
-          <TransportModeSelector selected={modes} onToggle={toggleMode} />
-        </View>
-
-        {/* Stops */}
-        <View style={[styles.section, styles.stopsSection]}>
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionLabel}>☆ stops</Text>
-            <Text style={styles.addStop}>+ add stop</Text>
+      <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
+        {/* Route map card */}
+        <View style={styles.sectionCard}>
+          <View style={styles.sectionRow}>
+            <Text style={styles.sectionLabel}>✦ route map ✦</Text>
+            <WindowControls />
           </View>
-          <StopList stops={DEMO_STOPS} />
+          <RouteMap />
         </View>
 
-        {/* Loading route image */}
-        {loading && (
-          <View style={styles.loadingWrap}>
-            <Image
-              source={require('../../assets/icons/loadingRoute.png')}
-              style={styles.loadingImg}
-              resizeMode="contain"
-            />
-            <Text style={styles.loadingText}>·* finding the best route… ·*</Text>
+        {/* Transport mode selector */}
+        <View style={styles.modesRow}>
+          {MODES.map((m) => (
+            <Pressable
+              key={m.key}
+              style={[styles.modeCard, m.key === activeMode && styles.modeCardActive]}
+              onPress={() => setActiveMode(m.key)}
+            >
+              <Text style={[styles.modeIcon, m.key === activeMode && styles.modeIconActive]}>{m.icon}</Text>
+              <Text style={[styles.modeLabel, m.key === activeMode && styles.modeLabelActive]}>{m.label}</Text>
+              <Text style={[styles.modeTime,  m.key === activeMode && styles.modeTimeActive]}>{m.time}</Text>
+            </Pressable>
+          ))}
+        </View>
+
+        {/* Itinerary */}
+        <View style={styles.itinerarySection}>
+          <View style={styles.itineraryHeader}>
+            <Text style={styles.itineraryTag}>·✦ itinerary ·✦</Text>
+            <View style={styles.routeBadge}>
+              <Text style={styles.routeBadgeText}>♡ green · 52min · 4.2 km</Text>
+            </View>
           </View>
-        )}
+
+          <View style={styles.itineraryList}>
+            {ITINERARY.map((leg) => (
+              <View key={leg.label}>
+                <View style={styles.legRow}>
+                  <View style={[
+                    styles.legPin,
+                    leg.label === 'A' && styles.legPinPink,
+                    leg.label === 'Z' && styles.legPinBlack,
+                  ]}>
+                    <Text style={[
+                      styles.legPinLabel,
+                      (leg.label === 'A' || leg.label === 'Z') && { color: '#fff' },
+                    ]}>{leg.label}</Text>
+                  </View>
+                  <View style={styles.legInfo}>
+                    <Text style={styles.legName}>{STOP_NAMES[leg.label]}</Text>
+                    <Text style={styles.legAddr}>{STOP_ADDRS[leg.label]}</Text>
+                  </View>
+                  <View style={styles.legTimeSide}>
+                    <View style={styles.legTimePill}>
+                      <Text style={styles.legTimeText}>{leg.time}</Text>
+                    </View>
+                    {leg.stay ? <Text style={styles.legStay}>{leg.stay}</Text> : null}
+                  </View>
+                </View>
+
+                {/* Walk leg */}
+                {leg.walkMin ? (
+                  <View style={styles.walkLeg}>
+                    <View style={styles.walkDot} />
+                    <Text style={styles.walkText}>Å {leg.walkMin} · {leg.walkKm}</Text>
+                  </View>
+                ) : null}
+              </View>
+            ))}
+          </View>
+        </View>
       </ScrollView>
-
-      {/* CTA */}
-      <View style={styles.footer}>
-        <View style={styles.dividerDashed} />
-        <AppButton
-          variant="primary"
-          size="lg"
-          label="★ find routes · 出发"
-          fullWidth
-          loading={loading}
-          onPress={handleFind}
-        />
-      </View>
-    </ScreenContainer>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
+  container: { flex: 1, backgroundColor: Colors.background },
+  starDeco: {
+    position: 'absolute', top: 52, right: PAGE_HORIZONTAL + 44,
+    fontSize: 14, color: Colors.gray300,
+  },
+
+  /* Header */
   header: {
-    paddingTop:        Spacing.xl,
-    paddingHorizontal: PAGE_HORIZONTAL,
-    marginBottom:      Spacing.lg,
-    gap:               Spacing.xs,
+    flexDirection: 'row', alignItems: 'center',
+    paddingHorizontal: PAGE_HORIZONTAL, paddingVertical: Spacing.md,
+    backgroundColor: '#fff', gap: Spacing.sm,
+    borderBottomWidth: 1, borderBottomColor: Colors.border,
   },
-  pageTag: {
-    fontFamily:    MONO_FONT,
-    fontSize:      9,
-    letterSpacing: 1.2,
-    color:         Colors.textSecondary,
+  backBtn: {
+    width: 32, height: 32, borderRadius: Radius.md,
+    borderWidth: 1, borderColor: Colors.border,
+    alignItems: 'center', justifyContent: 'center', backgroundColor: '#fff',
   },
-  headerSub: {
-    marginTop: Spacing.xs,
+  headerText: { flex: 1, gap: 2 },
+  headerTitle: { fontSize: 16, fontWeight: '600', color: Colors.textPrimary, letterSpacing: 0.2 },
+  headerSub: { fontFamily: MONO_FONT, fontSize: 10, color: Colors.textSecondary, letterSpacing: 0.5 },
+  shareBtn: {
+    width: 34, height: 34, borderRadius: Radius.md,
+    borderWidth: 1, borderColor: Colors.primaryLight,
+    backgroundColor: Colors.primaryPale,
+    alignItems: 'center', justifyContent: 'center',
   },
-  scroll: {
-    paddingBottom: Spacing.xxxl,
+
+  scroll: { paddingHorizontal: PAGE_HORIZONTAL, paddingTop: Spacing.md, paddingBottom: Spacing.xxxl, gap: Spacing.md },
+
+  /* Section card */
+  sectionCard: {
+    backgroundColor: '#fff', borderRadius: Radius.lg, padding: Spacing.base, gap: Spacing.md,
+    shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 6, elevation: 2,
   },
-  searchCard: {
-    backgroundColor:  Colors.card,
-    borderRadius:     Radius.lg,
-    borderWidth:      1,
-    borderColor:      Colors.border,
-    padding:          Spacing.base,
-    marginHorizontal: PAGE_HORIZONTAL,
-    marginBottom:     Spacing.lg,
-    gap:              Spacing.sm,
+  sectionRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  sectionLabel: { fontFamily: MONO_FONT, fontSize: 11, color: Colors.textSecondary, letterSpacing: 1 },
+
+  /* Transport modes */
+  modesRow: { flexDirection: 'row', gap: Spacing.sm },
+  modeCard: {
+    flex: 1, alignItems: 'center', gap: 2, paddingVertical: Spacing.sm,
+    backgroundColor: '#fff', borderRadius: Radius.md,
+    borderWidth: 1, borderColor: Colors.border,
   },
-  cardTag: {
-    fontFamily:    MONO_FONT,
-    fontSize:      9,
-    letterSpacing: 1.0,
-    color:         Colors.textSecondary,
+  modeCardActive: { backgroundColor: '#FDF0E0', borderColor: '#E8B87A' },
+  modeIcon:  { fontSize: 16, color: Colors.textSecondary },
+  modeIconActive: { color: '#C88A3A' },
+  modeLabel: { fontFamily: MONO_FONT, fontSize: 9, color: Colors.textSecondary, letterSpacing: 0.5 },
+  modeLabelActive: { color: '#C88A3A', fontWeight: '600' },
+  modeTime:  { fontFamily: MONO_FONT, fontSize: 11, fontWeight: '600', color: Colors.textSecondary },
+  modeTimeActive: { color: '#C88A3A' },
+
+  /* Itinerary */
+  itinerarySection: { gap: Spacing.sm },
+  itineraryHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: Spacing.sm },
+  itineraryTag: { fontFamily: MONO_FONT, fontSize: 11, color: Colors.textSecondary, letterSpacing: 1 },
+  routeBadge: {
+    backgroundColor: '#FDF0E0', paddingHorizontal: Spacing.sm, paddingVertical: 4,
+    borderRadius: Radius.full, borderWidth: 1, borderColor: '#E8B87A',
   },
-  dividerDashed: {
-    borderBottomWidth: 1,
-    borderStyle:       'dashed',
-    borderColor:       Colors.border,
+  routeBadgeText: { fontFamily: MONO_FONT, fontSize: 10, color: '#C88A3A', letterSpacing: 0.3 },
+
+  itineraryList: {
+    backgroundColor: '#fff', borderRadius: Radius.lg,
+    shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 6, elevation: 2,
+    overflow: 'hidden',
   },
-  inputWrap: {
-    marginBottom: 0,
+  legRow: {
+    flexDirection: 'row', alignItems: 'flex-start', gap: Spacing.sm,
+    padding: Spacing.base, borderBottomWidth: 1, borderBottomColor: Colors.border,
   },
-  dotOrigin: {
-    width:        8,
-    height:       8,
-    borderRadius: Radius.full,
-    borderWidth:  2,
-    borderColor:  Colors.gray300,
+  legPin: {
+    width: 28, height: 28, borderRadius: 14, borderWidth: 1.5, borderColor: '#333',
+    backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
   },
-  routeLine: {
-    width:           1,
-    height:          16,
-    backgroundColor: Colors.border,
-    marginLeft:      3,
-    marginVertical:  Spacing.xs,
+  legPinPink:  { backgroundColor: Colors.primary, borderColor: Colors.primary },
+  legPinBlack: { backgroundColor: '#1a1a1a', borderColor: '#1a1a1a' },
+  legPinLabel: { fontFamily: MONO_FONT, fontSize: 10, fontWeight: '700', color: '#333' },
+  legInfo: { flex: 1, gap: 2 },
+  legName: { fontSize: 14, fontWeight: '600', color: Colors.textPrimary },
+  legAddr: { fontFamily: MONO_FONT, fontSize: 10, color: Colors.textSecondary, letterSpacing: 0.3 },
+  legTimeSide: { alignItems: 'flex-end', gap: 3, flexShrink: 0 },
+  legTimePill: {
+    backgroundColor: Colors.primaryPale, paddingHorizontal: 8, paddingVertical: 3,
+    borderRadius: Radius.full, borderWidth: 1, borderColor: Colors.primaryLight,
   },
-  section: {
-    marginBottom: Spacing.lg,
+  legTimeText: { fontFamily: MONO_FONT, fontSize: 10, fontWeight: '700', color: Colors.primaryDark },
+  legStay: { fontFamily: MONO_FONT, fontSize: 9, color: Colors.textSecondary, letterSpacing: 0.3 },
+  walkLeg: {
+    flexDirection: 'row', alignItems: 'center', gap: Spacing.sm,
+    paddingHorizontal: Spacing.base + 40, paddingVertical: Spacing.xs,
+    borderBottomWidth: 1, borderBottomColor: Colors.border,
   },
-  sectionLabel: {
-    fontFamily:        MONO_FONT,
-    fontSize:          10,
-    letterSpacing:     1.0,
-    color:             Colors.textPrimary,
-    fontWeight:        '600',
-    paddingHorizontal: PAGE_HORIZONTAL,
-    marginBottom:      Spacing.sm,
-  },
-  stopsSection: {
-    paddingHorizontal: PAGE_HORIZONTAL,
-  },
-  sectionHeader: {
-    flexDirection:  'row',
-    justifyContent: 'space-between',
-    alignItems:     'center',
-    marginBottom:   Spacing.sm,
-  },
-  addStop: {
-    fontFamily:    MONO_FONT,
-    fontSize:      10,
-    color:         Colors.primaryDark,
-    letterSpacing: 0.5,
-  },
-  loadingWrap: {
-    alignItems:      'center',
-    paddingVertical: Spacing.xl,
-    gap:             Spacing.md,
-  },
-  loadingImg: {
-    width:  120,
-    height: 120,
-  },
-  loadingText: {
-    fontFamily:    MONO_FONT,
-    fontSize:      10,
-    color:         Colors.textSecondary,
-    letterSpacing: 1.0,
-  },
-  footer: {
-    paddingHorizontal: PAGE_HORIZONTAL,
-    paddingBottom:     Spacing.xl,
-    paddingTop:        Spacing.md,
-    backgroundColor:   Colors.background,
-    gap:               Spacing.md,
-  },
+  walkDot: { width: 4, height: 4, borderRadius: 2, backgroundColor: Colors.gray300 },
+  walkText: { fontFamily: MONO_FONT, fontSize: 10, color: Colors.textSecondary, letterSpacing: 0.3 },
 });

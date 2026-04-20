@@ -1,63 +1,108 @@
-import React from 'react';
-import { View, StyleSheet, Image, Text } from 'react-native';
+import React, { useEffect, useRef } from 'react';
+import { View, StyleSheet, Image, Text, Animated } from 'react-native';
 import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import AppButton from '@/components/common/AppButton';
 import { Colors } from '@/constants/colors';
 import { Spacing, Radius, PAGE_HORIZONTAL } from '@/constants/spacing';
 import { MONO_FONT } from '@/constants/typography';
 
+const SEGMENTS = 14;
+
+function ProgressBar() {
+  return (
+    <View style={pb.wrap}>
+      <View style={pb.track}>
+        {Array.from({ length: SEGMENTS }).map((_, i) => (
+          <View key={i} style={pb.block} />
+        ))}
+      </View>
+      <Text style={pb.label}>100%</Text>
+    </View>
+  );
+}
+
+const pb = StyleSheet.create({
+  wrap: {
+    flexDirection: 'row',
+    alignItems:    'center',
+    gap:           Spacing.sm,
+    marginTop:     Spacing.md,
+  },
+  track: {
+    flex:          1,
+    flexDirection: 'row',
+    gap:           3,
+  },
+  block: {
+    flex:            1,
+    height:          10,
+    borderRadius:    2,
+    backgroundColor: Colors.textPrimary,
+  },
+  label: {
+    fontFamily:    MONO_FONT,
+    fontSize:      12,
+    fontWeight:    '600',
+    color:         Colors.textPrimary,
+    letterSpacing: 0.5,
+  },
+});
+
 export default function LoginPage() {
+  const fadeIn = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    Animated.timing(fadeIn, {
+      toValue:         1,
+      duration:        600,
+      useNativeDriver: true,
+    }).start();
+
+    const timer = setTimeout(() => {
+      router.replace('/(auth)/login-methods');
+    }, 2200);
+
+    return () => clearTimeout(timer);
+  }, []);
+
   return (
     <SafeAreaView style={styles.container}>
+      {/* Scattered star decorations */}
+      <Text style={[styles.star, { top: 80,  left: 30,  fontSize: 22, color: Colors.primary }]}>★</Text>
+      <Text style={[styles.star, { top: 140, right: 40, fontSize: 16, color: Colors.primaryLight }]}>★</Text>
+      <Text style={[styles.star, { top: 220, left: 55,  fontSize: 14, color: Colors.primaryLight }]}>☆</Text>
+      <Text style={[styles.star, { bottom: 180, right: 30, fontSize: 18, color: Colors.primary, opacity: 0.5 }]}>★</Text>
+      <Text style={[styles.star, { bottom: 100, left: 25,  fontSize: 12, color: Colors.primaryLight }]}>☆</Text>
+      <Text style={[styles.star, { bottom: 260, right: 55, fontSize: 14, color: Colors.primaryLight }]}>★</Text>
 
-      {/* ── Brand block ── */}
-      <View style={styles.brand}>
-        <View style={styles.iconWrap}>
+      {/* Center content */}
+      <Animated.View style={[styles.body, { opacity: fadeIn }]}>
+        <Text style={styles.tagline}>·* loading my map *·</Text>
+
+        {/* Cat card */}
+        <View style={styles.card}>
           <Image
             source={require('../../assets/icons/appIcon.png')}
-            style={styles.icon}
+            style={styles.catImage}
             resizeMode="contain"
           />
+
+          <ProgressBar />
+
+          <Text style={styles.loadingText}>almost there ♪...</Text>
         </View>
+      </Animated.View>
 
-        <Text style={styles.appName}>Meowp</Text>
-        <Text style={styles.appSub}>route planner · 路线规划</Text>
-
-        {/* Thin dashed accent line */}
-        <View style={styles.accentLine} />
-
-        <Text style={styles.appTagline}>·* plan smarter · travel better ·*</Text>
+      {/* Bottom word pills */}
+      <View style={styles.pillRow}>
+        {(['nice', 'to', 'meowp', 'you'] as const).map((word) => (
+          <View key={word} style={[styles.pill, word === 'meowp' && styles.pillActive]}>
+            <Text style={[styles.pillText, word === 'meowp' && styles.pillTextActive]}>
+              {word}
+            </Text>
+          </View>
+        ))}
       </View>
-
-      {/* ── Progress strip (Y2K personality, readable) ── */}
-      <View style={styles.progressWrap}>
-        <View style={styles.progressTrack}>
-          <View style={styles.progressFill} />
-        </View>
-        <Text style={styles.progressLabel}>100 %  ♪</Text>
-      </View>
-
-      {/* ── Actions ── */}
-      <View style={styles.actions}>
-        <AppButton
-          variant="primary"
-          size="lg"
-          label="★  sign in · 登录"
-          fullWidth
-          onPress={() => router.push('/(auth)/login-methods')}
-        />
-        <AppButton
-          variant="secondary"
-          size="lg"
-          label="✦  create your space"
-          fullWidth
-          onPress={() => router.push('/(auth)/signup')}
-        />
-
-        <Text style={styles.footer}>© @meowp · made w/ ♡</Text>
-      </View>
-
     </SafeAreaView>
   );
 }
@@ -66,104 +111,76 @@ const styles = StyleSheet.create({
   container: {
     flex:            1,
     backgroundColor: Colors.background,
-    justifyContent:  'space-between',
-  },
-
-  /* Brand */
-  brand: {
-    flex:           1,
-    alignItems:     'center',
-    justifyContent: 'center',
-    gap:            Spacing.md,
-    paddingHorizontal: PAGE_HORIZONTAL,
-  },
-  iconWrap: {
-    width:           96,
-    height:          96,
-    borderRadius:    Radius.xl,
-    backgroundColor: Colors.primaryPale,
-    borderWidth:     1,
-    borderColor:     Colors.primaryLight,
     alignItems:      'center',
     justifyContent:  'center',
-    marginBottom:    Spacing.sm,
   },
-  icon: {
-    width:  64,
-    height: 64,
+  star: {
+    position: 'absolute',
+    fontWeight: '900',
   },
-  appName: {
-    fontSize:      32,
-    fontWeight:    '700',
-    color:         Colors.textPrimary,
-    letterSpacing: 1.0,
-  },
-  appSub: {
-    fontFamily:    MONO_FONT,
-    fontSize:      13,           // ≥13 px — legible mono
-    fontWeight:    '400',
-    color:         Colors.gray500,  // #888 — passes WCAG AA on white
-    letterSpacing: 0.4,
-  },
-  accentLine: {
-    width:             64,
-    borderBottomWidth: 1,
-    borderStyle:       'dashed',
-    borderColor:       Colors.primaryLight,
-    marginVertical:    Spacing.xs,
-  },
-  appTagline: {
-    fontFamily:    MONO_FONT,
-    fontSize:      12,           // 12 px mono — readable with low spacing
-    fontWeight:    '500',
-    color:         Colors.gray500,
-    letterSpacing: 0.6,
-  },
-
-  /* Progress strip */
-  progressWrap: {
-    flexDirection:     'row',
-    alignItems:        'center',
-    gap:               Spacing.md,
-    paddingHorizontal: PAGE_HORIZONTAL + 8,
-    marginBottom:      Spacing.xxl,
-  },
-  progressTrack: {
-    flex:            1,
-    height:          6,
-    backgroundColor: Colors.gray100,
-    borderRadius:    Radius.full,
-    borderWidth:     1,
-    borderColor:     Colors.border,
-    overflow:        'hidden',
-  },
-  progressFill: {
-    width:           '100%',
-    height:          '100%',
-    backgroundColor: Colors.primary,
-    borderRadius:    Radius.full,
-  },
-  progressLabel: {
-    fontFamily:    MONO_FONT,
-    fontSize:      13,           // same baseline as appSub
-    fontWeight:    '600',
-    color:         Colors.primaryDark,
-    letterSpacing: 0.2,
-  },
-
-  /* Actions */
-  actions: {
+  body: {
+    alignItems: 'center',
+    width:      '100%',
     paddingHorizontal: PAGE_HORIZONTAL,
-    paddingBottom:     Spacing.xxl,
-    gap:               Spacing.sm,
+    gap: Spacing.lg,
   },
-  footer: {
+  tagline: {
     fontFamily:    MONO_FONT,
-    fontSize:      12,           // 12 px — minimum readable
-    fontWeight:    '400',
-    color:         Colors.gray500,
-    letterSpacing: 0.3,
+    fontSize:      13,
+    color:         Colors.textSecondary,
+    letterSpacing: 4,
     textAlign:     'center',
-    marginTop:     Spacing.xs,
+  },
+  card: {
+    backgroundColor: '#FFFFFF',
+    borderRadius:    Radius.xl,
+    paddingVertical:   Spacing.xxl,
+    paddingHorizontal: Spacing.xxl,
+    alignItems:      'center',
+    width:           '100%',
+    shadowColor:     '#000',
+    shadowOffset:    { width: 0, height: 2 },
+    shadowOpacity:   0.06,
+    shadowRadius:    12,
+    elevation:       3,
+  },
+  catImage: {
+    width:  160,
+    height: 160,
+  },
+  loadingText: {
+    fontFamily:    MONO_FONT,
+    fontSize:      13,
+    color:         Colors.textSecondary,
+    letterSpacing: 0.5,
+    marginTop:     Spacing.sm,
+  },
+  pillRow: {
+    flexDirection:   'row',
+    gap:             Spacing.sm,
+    position:        'absolute',
+    bottom:          48,
+  },
+  pill: {
+    paddingHorizontal: Spacing.base,
+    paddingVertical:   6,
+    borderRadius:      Radius.full,
+    backgroundColor:   '#FFFFFF',
+    borderWidth:       1,
+    borderColor:       Colors.border,
+  },
+  pillActive: {
+    backgroundColor: Colors.primary,
+    borderColor:     Colors.primary,
+  },
+  pillText: {
+    fontFamily:    MONO_FONT,
+    fontSize:      12,
+    color:         Colors.textSecondary,
+    letterSpacing: 0.3,
+  },
+  pillTextActive: {
+    color:      Colors.textInverse,
+    fontWeight: '600',
   },
 });

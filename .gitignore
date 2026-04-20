@@ -35,3 +35,6 @@ dist/
 expo-env.d.ts
 # @end expo-cli
 
+# ignore standalone UI prototypes
+*Standalone*.html
+*standalone*.html

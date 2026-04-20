@@ -7,10 +7,10 @@ module.exports = {
     orientation: 'portrait',
     icon: './assets/icons/appIcon.png',
     userInterfaceStyle: 'light',
-    newArchEnabled: true,
     ios: {
       bundleIdentifier: 'com.meowp.app',
       supportsTablet: false,
+      buildReactNativeFromSource: false,
       config: {
         googleMapsApiKey: process.env.GOOGLE_MAPS_API_KEY,
       },

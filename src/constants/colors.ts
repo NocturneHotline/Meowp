@@ -1,6 +1,6 @@
 export const Colors = {
-  background:     '#FFFFFF',
-  backgroundWarm: '#F5F5F5',
+  background:     '#EFEAE6',
+  backgroundWarm: '#EFEAE6',
   card:           '#FFFFFF',
   surface:        '#F9C8D8',
 

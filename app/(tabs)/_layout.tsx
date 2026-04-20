@@ -1,15 +1,25 @@
 import { Tabs } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
 import { MONO_FONT } from '@/constants/typography';
+import { Colors } from '@/constants/colors';
+import { TabIcon, type TabIconName } from '@/components/common/TabIcon';
 
-type IoniconName = React.ComponentProps<typeof Ionicons>['name'];
+const ACTIVE   = Colors.primaryDark;
+const INACTIVE = Colors.gray400;
 
-const ACTIVE   = '#6aaa82';
-const INACTIVE = '#aaa';
+const TAB_MAP: Record<string, TabIconName> = {
+  home: 'map', plan: 'routes', community: 'saved', profile: 'me',
+};
 
-function tabIcon(inactive: IoniconName, active: IoniconName) {
-  return ({ color, focused }: { color: string; focused: boolean }) => (
-    <Ionicons name={focused ? active : inactive} size={20} color={color} />
+const TAB_LABELS: Record<string, string> = {
+  home:      '·map·',
+  plan:      '·routes·',
+  community: '·saved·',
+  profile:   '·me·',
+};
+
+function tabIcon(name: string) {
+  return ({ color }: { color: string; focused: boolean }) => (
+    <TabIcon name={TAB_MAP[name]} color={color} size={24} />
   );
 }
 
@@ -19,13 +29,13 @@ export default function TabsLayout() {
       screenOptions={{
         headerShown: false,
         tabBarStyle: {
-          backgroundColor: '#fff',
+          backgroundColor: '#FFFFFF',
           borderTopWidth:  1,
-          borderTopColor:  '#ebebeb',
+          borderTopColor:  Colors.border,
           elevation:       0,
           shadowOpacity:   0,
-          height:          56,
-          paddingBottom:   6,
+          height:          58,
+          paddingBottom:   8,
           paddingTop:      6,
         },
         tabBarActiveTintColor:   ACTIVE,
@@ -33,39 +43,25 @@ export default function TabsLayout() {
         tabBarLabelStyle: {
           fontFamily:    MONO_FONT,
           fontSize:      10,
-          fontWeight:    '500',
           letterSpacing: 0.5,
-          marginTop:     2,
         },
       }}
     >
       <Tabs.Screen
         name="home"
-        options={{
-          title:      '地图',
-          tabBarIcon: tabIcon('map-outline', 'map'),
-        }}
+        options={{ title: TAB_LABELS.home, tabBarIcon: tabIcon('home') }}
       />
       <Tabs.Screen
         name="plan"
-        options={{
-          title:      '路线',
-          tabBarIcon: tabIcon('navigate-outline', 'navigate'),
-        }}
+        options={{ title: TAB_LABELS.plan, tabBarIcon: tabIcon('plan') }}
       />
       <Tabs.Screen
         name="community"
-        options={{
-          title:      '收藏',
-          tabBarIcon: tabIcon('bookmark-outline', 'bookmark'),
-        }}
+        options={{ title: TAB_LABELS.community, tabBarIcon: tabIcon('community') }}
       />
       <Tabs.Screen
         name="profile"
-        options={{
-          title:      '我的',
-          tabBarIcon: tabIcon('person-outline', 'person'),
-        }}
+        options={{ title: TAB_LABELS.profile, tabBarIcon: tabIcon('profile') }}
       />
     </Tabs>
   );
