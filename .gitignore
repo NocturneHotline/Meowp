@@ -38,3 +38,21 @@ expo-env.d.ts
 # ignore standalone UI prototypes
 *Standalone*.html
 *standalone*.html
+
+# AI tools
+.agent/
+.claude/
+.codebuddy/
+.codex/
+.continue/
+.cursor/
+.gemini/
+.qoder/
+.roo/
+.trae/
+.windsurf/
+.kiro/
+.opencode/
+
+# GitHub prompts
+.github/prompts/
