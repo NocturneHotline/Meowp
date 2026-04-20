@@ -14,7 +14,10 @@
 {
 // @generated begin react-native-maps-init - expo prebuild (DO NOT MODIFY) sync-e5a09b7a086453483f797bf43ca1cdfd1aa96ca6
 #if __has_include(<GoogleMaps/GoogleMaps.h>)
-  [GMSServices provideAPIKey:@"REMOVED_GOOGLE_MAPS_API_KEY"];
+  NSString *mapsApiKey = [[NSBundle mainBundle] objectForInfoDictionaryKey:@"GMSApiKey"];
+  if (mapsApiKey.length > 0) {
+    [GMSServices provideAPIKey:mapsApiKey];
+  }
 #endif
 // @generated end react-native-maps-init
   self.moduleName = @"main";
